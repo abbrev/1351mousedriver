@@ -139,8 +139,8 @@ clearxhi ;set x sprite pos low
 scanmovs
 
          ;--- X Axis ---
-         lda potx
-oldpotx  ldy #0
+         ldy potx
+oldpotx  lda #0
          jsr movechk
          beq noxmove
 
@@ -155,8 +155,8 @@ oldpotx  ldy #0
 noxmove
 
          ;--- Y Axis ---
-         lda poty
-oldpoty  ldy #0
+         ldy poty
+oldpoty  lda #0
          jsr movechk
          beq noymov
 
@@ -176,58 +176,57 @@ oldpoty  ldy #0
 noymov
          rts
 
-movechk  ;Y -> Old Pot Value
-         ;A -> New Pot Value
+movechk  ;A -> Old Pot Value
+         ;Y -> New Pot Value
 
-         sty oldvalue+1
-         tay
+         and #%01111110
+         sta oldvalue+1
+         tya
 
          sec
 oldvalue sbc #$ff
-         and #%01111111
-         cmp #%01000000
-         bcs neg
-
-         lsr a   ;remove noise bit
+         and #%01111110    ; clear sign bit and noise bit
          beq nomove
 
+         lsr a             ; shift out noise bit (already zeroed, so carry is now cleared)
+
+         ; sign extend bit 5
+         adc #%11100000
+         eor #%11100000
+         bmi neg
+
+         ; +ve
+
+         ldx #$00
          cmp #accelthr ;Acceleration Speed
          bcc noposaccel
          asl a   ;X2
          sbc #((2-1)*accelthr)-1
 noposaccel
 
-         ldx #0
-         cmp #0
-
          ;A > 0
-         ;X = 0 (sign extension)
+         ;X = $00 (sign extension)
          ;Y = newvalue
          ;Z = 0
 
          rts
 
-neg      ora #%10000000
-         cmp #$ff
-         beq nomove
 
-         sec    ;Keep hi negative bit
-         ror a  ;remove noise bit
+neg      ; -ve
 
+         ldx #$ff
          cmp #-accelthr ;Acceleration Speed
          bcs nonegaccel
          asl a       ;X2
          adc #((2-1)*accelthr)-1
 nonegaccel
 
-         ldx #$ff
-
          ;A < 0
          ;X = $ff (sign extension)
          ;Y = newvalue
          ;Z = 0
 
-         rts
+         ;fallthrough
 
 nomove   ;A = -
          ;X = -
