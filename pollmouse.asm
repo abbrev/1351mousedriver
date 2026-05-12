@@ -87,7 +87,7 @@ chky     ldy musposy+1
          bmi zeroy
          beq loychk
 
-         dey musposy+1
+         dec musposy+1
          ldy #maxy
          sty musposy
          bne movemus
