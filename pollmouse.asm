@@ -64,6 +64,8 @@ maxy     = 199 ;Screen Height
 offsetx  = 24 ;Sprite left border edge
 offsety  = 50 ;Sprite top  border edge
 
+accelthr = 10 ;Acceleration threshold
+
 musposx  .word 320/2
 musposy  .word 200/2
 
@@ -189,9 +191,11 @@ oldvalue sbc #$ff
          lsr a   ;remove noise bit
          beq nomove
 
-         cmp #10 ;Acceleration Speed
-         bcc *+3
+         cmp #accelthr ;Acceleration Speed
+         bcc noposaccel
          asl a   ;X2
+         sbc #((2-1)*accelthr)-1
+noposaccel
 
          ldx #0
          cmp #0
@@ -210,9 +214,11 @@ neg      ora #%10000000
          sec    ;Keep hi negative bit
          ror a  ;remove noise bit
 
-         cmp #256-10 ;Acceleration Speed
-         bcs *+3
+         cmp #-accelthr ;Acceleration Speed
+         bcs nonegaccel
          asl a       ;X2
+         adc #((2-1)*accelthr)-1
+nonegaccel
 
          ldx #$ff
 
